@@ -1,0 +1,138 @@
+{
+  "mcpServers": {
+    "redis": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/redis",
+        "redis://host.docker.internal:6379"
+      ]
+    },
+    "djangoMigrations": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-d",
+        "--name", "django-migrations-mcp",
+        "-e", "DJANGO_SETTINGS_MODULE=your_project.settings",
+        "-e", "MCP_SERVICE_PORT=8000",
+        "-v", "/path/to/your/django/project:/app/project",
+        "-p", "8000:8000",
+        "django-migrations-mcp"
+      ]
+    },
+    "djangoMigrationsWithRedis": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-d",
+        "--name", "django-migrations-mcp",
+        "-e", "DJANGO_SETTINGS_MODULE=your_project.settings",
+        "-e", "MCP_SERVICE_PORT=8000",
+        "-e", "REDIS_URL=redis://host.docker.internal:6379",
+        "-v", "/path/to/your/django/project:/app/project",
+        "-p", "8000:8000",
+        "--network", "host",
+        "django-migrations-mcp"
+      ]
+    },
+    "development": {
+      "command": "docker-compose",
+      "args": [
+        "up",
+        "-d",
+        "--build"
+      ],
+      "environment": {
+        "DJANGO_SETTINGS_MODULE": "your_project.settings",
+        "MCP_SERVICE_PORT": "8000",
+        "REDIS_URL": "redis://localhost:6379"
+      }
+    },
+    "testing": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-e", "DJANGO_SETTINGS_MODULE=your_project.settings",
+        "-e", "PYTHONPATH=/app",
+        "-v", "${PWD}:/app",
+        "django-migrations-mcp",
+        "pytest"
+      ]
+    },
+    "production": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-d",
+        "--name", "django-migrations-mcp",
+        "-e", "DJANGO_SETTINGS_MODULE=your_project.settings",
+        "-e", "MCP_SERVICE_PORT=8000",
+        "-e", "REDIS_URL=redis://your-redis-host:6379",
+        "-v", "/path/to/your/django/project:/app/project",
+        "-p", "8000:8000",
+        "--restart", "unless-stopped",
+        "--network", "your-network",
+        "django-migrations-mcp"
+      ],
+      "healthCheck": {
+        "test": ["CMD", "curl", "-f", "http://localhost:8000/health"],
+        "interval": "30s",
+        "timeout": "10s",
+        "retries": 3
+      }
+    }
+  },
+  "tools": {
+    "showMigrations": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "http://localhost:8000/mcp",
+        "-H", "Content-Type: application/json",
+        "-d", "{\"method\": \"show_migrations\"}"
+      ]
+    },
+    "makeMigrations": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "http://localhost:8000/mcp",
+        "-H", "Content-Type: application/json",
+        "-d", "{\"method\": \"make_migrations\", \"params\": {\"apps\": [\"your_app\"]}}"
+      ]
+    },
+    "migrate": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "http://localhost:8000/mcp",
+        "-H", "Content-Type: application/json",
+        "-d", "{\"method\": \"migrate\", \"params\": {\"app\": \"your_app\"}}"
+      ]
+    }
+  },
+  "networks": {
+    "development": {
+      "command": "docker",
+      "args": [
+        "network",
+        "create",
+        "mcp-dev-network"
+      ]
+    },
+    "production": {
+      "command": "docker",
+      "args": [
+        "network",
+        "create",
+        "--driver", "overlay",
+        "--attachable",
+        "mcp-prod-network"
+      ]
+    }
+  }
+} 
