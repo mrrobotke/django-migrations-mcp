@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/mrrobotke-django-migrations-mcp-badge.png)](https://mseep.ai/app/mrrobotke-django-migrations-mcp)
+
 # Django Migrations MCP Service
 
 A Model Context Protocol (MCP) service for managing Django migrations in distributed environments. This service wraps Django's migration commands and exposes them as MCP endpoints, making it easy to manage migrations across multiple services and integrate with CI/CD pipelines.
